@@ -9,6 +9,14 @@ import masscan
 import requests
 import socket
 import datetime
+import os
+from concurrent.futures import ThreadPoolExecutor
+requests.packages.urllib3.disable_warnings()
+
+Portfolio = 'CleanData/'+'-'.join(str(datetime.datetime.now()).replace(' ','-').replace(':','-').split('.')[0].split('-'))
+os.makedirs(Portfolio)
+
+
 ImgTxt = '-'.join(str(datetime.datetime.now()).replace(' ','-').replace(':','-').split('.')[0].split('-'))+'.txt'
 ImgHtml = '-'.join(str(datetime.datetime.now()).replace(' ','-').replace(':','-').split('.')[0].split('-'))+'.html'
 
@@ -16,10 +24,8 @@ def Log(x):
     with open('../LangNetWorkTopoLog.txt','a+',encoding='utf-8')as a:
         a.write(str( '-'.join(str(datetime.datetime.now()).replace(' ','-').replace(':','-').split('.')[0].split('-')))+'    '+x+'\n')
 
-from concurrent.futures import ThreadPoolExecutor
-requests.packages.urllib3.disable_warnings()
-Alive_Status = [200,301,302,400,404]
 
+Alive_Status = [200,301,302,400,404]
 def get_title(r):
     title = '获取失败'
     try:
@@ -135,10 +141,11 @@ class IpInfoScan:
             mas = masscan.PortScanner()
             #mas.scan(self.ip,ports='21,22,23,25,80,81,88,8080,8888,999,9999,7000,1433,1521,3306,3389,6379,7001,27017,27018')
             # 这里简单的扫一下普通端口即可
-            if inport == '0':
-                mas.scan(self.ip,arguments='--rate {}'.format(rate))
-            else:
-                mas.scan(self.ip,ports=inport,arguments='--rate {}'.format(rate))
+            mas.scan(self.ip, ports=inport, arguments='--rate {}'.format(rate))
+            # if inport == '0':
+            #     mas.scan(self.ip,arguments='--rate {}'.format(rate))
+            # else:
+            #     mas.scan(self.ip,ports=inport,arguments='--rate {}'.format(rate))
             Results = mas.scan_result['scan']
             AliveHosts = list(Results.keys())
             if AliveHosts != []:
@@ -153,10 +160,11 @@ class IpInfoScan:
     def GetOneIPorts(self,ip,inport,rate):
         try:
             mas = masscan.PortScanner()
-            if inport == '0':
-                mas.scan(self.ip,arguments='--rate {}'.format(rate))
-            else:
-                mas.scan(self.ip,ports=inport,arguments='--rate {}'.format(rate))
+            mas.scan(self.ip, ports=inport, arguments='--rate {}'.format(rate))
+            # if inport == '0':
+            #     mas.scan(self.ip,arguments='--rate {}'.format(rate))
+            # else:
+            #     mas.scan(self.ip,ports=inport,arguments='--rate {}'.format(rate))
             OpenPorts = mas.scan_result['scan'][ip]['tcp'].keys()
         except Exception as e:
             Log('获取扫描IP端口结果异常:{}'.format(str(e)))
@@ -209,8 +217,10 @@ class IpInfoScan:
         if openports != {} and openports != None:
             for k,v in openports.items():
                 retuls = {}
-                print('[{}]  主机 {} 开放端口 {} 个'.format(str(datetime.datetime.now()).split('.')[0], k,len(v)))
+                print('[{}]  主机 {} 开放端口 {} 个'.format(str(datetime.datetime.now()).split('.')[0], k.ljust(15),len(v)))
                 Log('主机 {} 开放端口 {} '.format(k,str(v)))
+                with open(os.path.join(Portfolio, 'AliveHosts') + '.txt', 'a+', encoding='utf-8')as b:
+                    b.write(k + '\n')
                 res = self.GetPoerInfos(k,v)
                 # {'80': 'http', '3389': 'ms-wbt-server'}
                 urls = []
@@ -254,7 +264,7 @@ def WriteImgTxt(IPdata,filename):
 
     outer_data_pair = list(servicedict.items())
     c=(
-        Pie(init_opts=opts.InitOpts(width="1600px", height="800px"))
+        Pie(init_opts=opts.InitOpts(width="2400px", height="800px"))
         .add(
             series_name="总体资产",
             data_pair=inner_data_pair,
@@ -296,21 +306,21 @@ def CleanData(IPdata,txtfile,htmlfile):
     ImgData = WriteImgTxt(IPdata,txtfile)
     with open('../'+htmlfile,'a+',encoding='utf-8')as a:
         a.write('''
-                <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
-            <title>网络资产拓扑图</title>
-        <link rel="stylesheet" href='https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap-theme.min.css'>
-        <link rel="stylesheet" href='https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css'>
-		 <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
+            <title>网络资产拓扑-LangNetworkTopology3</title>
+        <link rel="stylesheet" href='{0}/static/bootstrap-theme.min.css'>
+        <link rel="stylesheet" href='{0}/static/bootstrap.min.css'>
+		 <script type="text/javascript" src="{0}/static/echarts.min.js"></script>
         </head>
-		<h1> 网络资产拓扑图</h1><hr/>
-        ''')
+		<h1> 主机资产分布图</h1><hr/>
+
+        '''.format(os.path.abspath('')))
         a.write(ImgData)
         a.write('''
         			<hr />
-			<h1> 网络资产详情表</h1><hr />
+			<h1> 主机资产详情表</h1><hr />
 			<div class="col-md-3">
         ''')
         portips = {}
@@ -343,6 +353,8 @@ def CleanData(IPdata,txtfile,htmlfile):
                              {}
                         </div>
                 '''.format(vv))
+                with open(os.path.join(Portfolio, k) + '.txt', 'a+', encoding='utf-8')as b:
+                    b.write(vv+'\n')
             a.write('<hr>')
 
         a.write('</div><div class="col-md-6">')
@@ -396,20 +408,43 @@ def CleanData(IPdata,txtfile,htmlfile):
 					         {}
 					    </div>
                 '''.format(vv))
+                with open(os.path.join(Portfolio, k) + '.txt', 'a+', encoding='utf-8')as b:
+                    b.write(vv+'\n')
             a.write('<hr>')
         a.write('</div></body></html>')
 if __name__ == '__main__':
+    import string
+    import sys
+    import time
+
+    list_jindu = string.ascii_letters + string.digits + '.' + '_' + ' '
+    jindu = 'LangNetworkTopology3 Console Start...'
+    jindud = ''
+    for xx in jindu:
+        for x in list_jindu:
+            sys.stdout.write(jindud + "\r")
+            if xx == x:
+                jindud = jindud + x
+                sys.stdout.write(jindud + "\r")
+                time.sleep(0.01)
+                break
+            else:
+                sys.stdout.write(jindud + x + "\r")
+                time.sleep(0.01)
+                sys.stdout.flush()
+            sys.stdout.write(jindud + "\r")
+    sys.stdout.write(jindud + '\r')
     print('''
 
-             _                           _
+             _                           _ 
             | |                         (_)
-            | |     __ _ _ __   __ _ _____
+            | |     __ _ _ __   __ _ _____ 
             | |    / _` | '_ \ / _` |_  / |
             | |___| (_| | | | | (_| |/ /| |
             |______\__,_|_| |_|\__, /___|_|
                                 __/ |      
                                |___/       
-                                           内网主机资产自动化拓扑
+
     ''')
     time.sleep(5)
     inp = input('导入IP文本:')
@@ -417,19 +452,21 @@ if __name__ == '__main__':
     por = input('输入扫描端口(21,22,8-888,6379,27017):')
     rat = input('设置每秒发包量(1000-5000):')
     try:
-        if 0<int(rat)<50000:
+        if 0<int(rat)<500000:
             pass
     except:
         print('发包量设置错误')
-    # ips = ['118.10.56.0/24','118.11.23.0/24','118.12.23.0/24']
+        time.sleep(600)
     res = []
+    if por == '0':
+        por = '2375,1098,135,50030,27018,873,514,8888,6002,4444,9110,4899,9200,1435,7000,27019,8161,11211,1521,8093,3306,137,999,4950,1099,50070,6371,88,7003,1434,89,9999,513,87,2601,8009,9300,5632,1080,9043,512,8649,6000,22,5900,9001,2049,9990,6001,8089,50000,81,53,888,2439,9111,8088,1423,8873,23,8083,1527,1001,21,80,6003,525,3888,9000,30015,1433,389,27017,2888,8000,2638,2181,7001,111,6372,25,4445,3389,139,5631,8080,6379,445,7002,161,2100'
     for ip in ips:
         a = IpInfoScan(ip)
-        res.extend(a.GetResult(por.replace('，',','),rat))
+        res.extend(a.GetResult(por.replace('，',',').replace(' ',',').replace(',,',','),rat))
     if res == []:
         print('扫描完毕~无存活IP~')
     else:
         CleanData(IPdata=res,txtfile=ImgTxt,htmlfile=ImgHtml)
-        print('扫描完毕~')
+        print('扫描完毕~结果保存在:{}'.format(ImgHtml))
     while 1:
         time.sleep(500)
