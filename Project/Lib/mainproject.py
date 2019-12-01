@@ -16,13 +16,8 @@ import random
 from concurrent.futures import ThreadPoolExecutor
 requests.packages.urllib3.disable_warnings()
 # from pyecharts.charts import Page, WordCloud
-
-Portfolio = 'CleanData/'+'-'.join(str(datetime.datetime.now()).replace(' ','-').replace(':','-').split('.')[0].split('-'))
-os.makedirs(Portfolio)
-
-
-ImgTxt = '-'.join(str(datetime.datetime.now()).replace(' ','-').replace(':','-').split('.')[0].split('-'))+'.txt'
-ImgHtml = '-'.join(str(datetime.datetime.now()).replace(' ','-').replace(':','-').split('.')[0].split('-'))+'.html'
+from multiprocessing import Pool
+import multiprocessing
 
 def Log(x):
     with open('../LangNetWorkTopoLog.txt','a+',encoding='utf-8')as a:
@@ -210,7 +205,7 @@ class IpInfoScan:
                     PortInfos[k] = GetPortInfo(str(k))
         return PortInfos
 
-    def GetResult(self,inport,rate):
+    def GetResult(self,inport,rate,Portfolio):
         results = []
         print('[{}]  端口扫描 : {}'.format(str(datetime.datetime.now()).split('.')[0], self.ip))
         Log('开始扫描IP:{}'.format(self.ip))
@@ -326,7 +321,7 @@ def WriteImgTxt(IPdata,filename):
         Log('生成效果图失败')
 
 
-def CleanData(IPdata,txtfile,htmlfile):
+def CleanData(IPdata,txtfile,htmlfile,Portfolio):
     Btn_Class = ['btn btn-danger', 'btn btn-warning', 'btn btn-info', 'btn btn-primary', 'btn btn-default',
                  'btn btn-success']
     AllResultFiles = set()
@@ -459,58 +454,87 @@ def CleanData(IPdata,txtfile,htmlfile):
             a.write('<hr>')
         a.write('</div></body></html>')
 if __name__ == '__main__':
-    list_jindu = string.ascii_letters + string.digits + '.' + '_' + ' '+'['+']'+'*'
-    jindu = ' [*] LangNetworkTopology3 Console Start...'
-    jindud = ''
-    for xx in jindu:
-        for x in list_jindu:
-            sys.stdout.write(jindud + "\r")
-            if xx == x:
-                jindud = jindud + x
-                sys.stdout.write(jindud + "\r")
-                time.sleep(0.01)
-                break
-            else:
-                sys.stdout.write(jindud + x + "\r")
-                time.sleep(0.01)
-                sys.stdout.flush()
-            sys.stdout.write(jindud + "\r")
-    sys.stdout.write(jindud + '\r')
-    print('''
+    multiprocessing.freeze_support()
+    Portfolio = 'CleanData/' + '-'.join(
+        str(datetime.datetime.now()).replace(' ', '-').replace(':', '-').split('.')[0].split('-'))
+    os.makedirs(Portfolio)
 
-             _                           _ 
-            | |                         (_)
-            | |     __ _ _ __   __ _ _____ 
-            | |    / _` | '_ \ / _` |_  / |
-            | |___| (_| | | | | (_| |/ /| |
-            |______\__,_|_| |_|\__, /___|_|
-                                __/ |      
-                               |___/       
+    ImgTxt = '-'.join(
+        str(datetime.datetime.now()).replace(' ', '-').replace(':', '-').split('.')[0].split('-')) + '.txt'
+    ImgHtml = '-'.join(
+        str(datetime.datetime.now()).replace(' ', '-').replace(':', '-').split('.')[0].split('-')) + '.html'
 
-    ''')
-    time.sleep(5)
+    # list_jindu = string.ascii_letters + string.digits + '.' + '_' + ' '+'['+']'+'*'
+    # jindu = ' [*] LangNetworkTopology3 Console Start...'
+    # jindud = ''
+    # for xx in jindu:
+    #     for x in list_jindu:
+    #         sys.stdout.write(jindud + "\r")
+    #         if xx == x:
+    #             jindud = jindud + x
+    #             sys.stdout.write(jindud + "\r")
+    #             time.sleep(0.01)
+    #             break
+    #         else:
+    #             sys.stdout.write(jindud + x + "\r")
+    #             time.sleep(0.01)
+    #             sys.stdout.flush()
+    #         sys.stdout.write(jindud + "\r")
+    # sys.stdout.write(jindud + '\r')
+    # print('''
+    #
+    #      _                           _
+    #     | |                         (_)
+    #     | |     __ _ _ __   __ _ _____
+    #     | |    / _` | '_ \ / _` |_  / |
+    #     | |___| (_| | | | | (_| |/ /| |
+    #     |______\__,_|_| |_|\__, /___|_|
+    #                         __/ |
+    #                        |___/
+    #
+    # ''')
+    #time.sleep(5)
     inp = input('导入IP文本:')
-    ips = [x.replace('\n','').strip() for x in open(inp,'r',encoding='utf-8').readlines()]
+    ips = [x.replace('\n','').strip() for x in open(inp.replace('"',''),'r',encoding='utf-8').readlines()]
     por = input('输入扫描端口(21,22,80-888,6379,27017):')
     rat = input('设置每秒发包量(1000-5000):')
+    pol = input('设置扫描进程数(1-8):')
     try:
         if 0<int(rat)<500000:
             pass
+        if 0<int(pol)<8:
+            pass
+        else:
+            print('进程数设置这么大，准备死机吧')
     except:
-        print('发包量设置错误')
+        print('发包量或进程数设置错误')
         time.sleep(600)
     res = []
     if por == '0':
         por = '2375,1098,135,50030,27018,873,514,8888,6002,4444,9110,4899,9200,1435,7000,27019,8161,11211,1521,8093,3306,137,999,4950,1099,50070,6371,88,7003,1434,89,9999,513,87,2601,8009,9300,5632,1080,9043,512,8649,6000,22,5900,9001,2049,9990,6001,8089,50000,81,53,888,2439,9111,8088,1423,8873,23,8083,1527,1001,21,80,6003,525,3888,9000,30015,1433,389,27017,2888,8000,2638,2181,7001,111,6372,25,4445,3389,139,5631,8080,6379,445,7002,161,2100'
     start_time = time.time()
-    TIME = str(int(str(time.time() - start_time).split('.')[0]) / 60).split('.')[0] + '分钟'
+
+    por = por.replace('，',',').replace(' ',',').replace(',,',',')
+    print('\n')
+    results = []
+    p = Pool(int(pol))
     for ip in ips:
         a = IpInfoScan(ip)
-        res.extend(a.GetResult(por.replace('，',',').replace(' ',',').replace(',,',','),rat))
+        results.append(p.apply_async(func=a.GetResult, args=(por,rat,Portfolio)))
+    p.close()
+    p.join()
+
+    res = [y for x in results for y in x.get()]
+    print(res)
+
+    # for ip in ips:
+    #     a = IpInfoScan(ip)
+    #     res.extend(a.GetResult(por.replace('，',',').replace(' ',',').replace(',,',','),rat))
+    TIME = str(int(str(time.time() - start_time).split('.')[0]) / 60).split('.')[0] + '分钟'
     if res == []:
         print('\n扫描完毕~无存活IP~')
     else:
-        CleanData(IPdata=res,txtfile=ImgTxt,htmlfile=ImgHtml)
+        CleanData(IPdata=res,txtfile=ImgTxt,htmlfile=ImgHtml,Portfolio=Portfolio)
         print('\n扫描完毕~耗时:{}~\n结果保存在:{}'.format(TIME,os.path.join(os.path.abspath('..'),ImgHtml)))
     while 1:
         time.sleep(500)
