@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+﻿# -*- coding:utf-8 -*-
 from __future__ import unicode_literals
 import string
 import sys
@@ -215,9 +215,10 @@ class IpInfoScan:
             openports = self.GetOneIPorts(self.ip,inport,rate)
         #openports = [80,3389]
         if openports != {} and openports != None:
+            print('\n[{}]  主机:{} 扫描完毕 存活主机共:{} 个 开始运行服务探测'.format(str(datetime.datetime.now()).split('.')[0],self.ip.ljust(15) ,
+                                                               len(openports)))
             for k,v in openports.items():
                 retuls = {}
-                print('[{}]  主机 {} 开放端口 {} 个'.format(str(datetime.datetime.now()).split('.')[0], k.ljust(15),len(v)))
                 Log('主机 {} 开放端口 {} '.format(k,str(v)))
                 with open(os.path.join(Portfolio, 'AliveHosts') + '.txt', 'a+', encoding='utf-8')as b:
                     b.write(k + '\n')
@@ -238,6 +239,7 @@ class IpInfoScan:
                         for u,t in urls.items():
                             with open(os.path.join(Portfolio, 'AliveUrls') + '.txt', 'a+', encoding='utf-8')as b:
                                 b.write(u + '\n')
+                print('[{}]  主机:{} 开放端口:{} 个 部署网站:{} 个 运行服务:{}'.format(str(datetime.datetime.now()).split('.')[0], k.ljust(15),len(v),len(AliveUrls),'/'.join(list(res.values()))))
 
                 retuls['time']=str(datetime.datetime.now()).replace(' ','-').replace(':','-').split('.')[0]
                 results.append(retuls)
@@ -464,36 +466,39 @@ if __name__ == '__main__':
     ImgHtml = '-'.join(
         str(datetime.datetime.now()).replace(' ', '-').replace(':', '-').split('.')[0].split('-')) + '.html'
 
-    # list_jindu = string.ascii_letters + string.digits + '.' + '_' + ' '+'['+']'+'*'
-    # jindu = ' [*] LangNetworkTopology3 Console Start...'
-    # jindud = ''
-    # for xx in jindu:
-    #     for x in list_jindu:
-    #         sys.stdout.write(jindud + "\r")
-    #         if xx == x:
-    #             jindud = jindud + x
-    #             sys.stdout.write(jindud + "\r")
-    #             time.sleep(0.01)
-    #             break
-    #         else:
-    #             sys.stdout.write(jindud + x + "\r")
-    #             time.sleep(0.01)
-    #             sys.stdout.flush()
-    #         sys.stdout.write(jindud + "\r")
-    # sys.stdout.write(jindud + '\r')
-    # print('''
-    #
-    #      _                           _
-    #     | |                         (_)
-    #     | |     __ _ _ __   __ _ _____
-    #     | |    / _` | '_ \ / _` |_  / |
-    #     | |___| (_| | | | | (_| |/ /| |
-    #     |______\__,_|_| |_|\__, /___|_|
-    #                         __/ |
-    #                        |___/
-    #
-    # ''')
-    #time.sleep(5)
+    print('''
+
+         _                           _
+        | |                         (_)
+        | |     __ _ _ __   __ _ _____
+        | |    / _` | '_ \ / _` |_  / |
+        | |___| (_| | | | | (_| |/ /| |
+        |______\__,_|_| |_|\__, /___|_|
+                            __/ |
+                           |___/
+
+    ''')
+
+    list_jindu = string.ascii_letters + string.digits + '.' + '_' + ' '+'['+']'+'*'
+    jindu = ' [*] LangNetworkTopology3 Console Start...'
+    jindud = ''
+    for xx in jindu:
+        for x in list_jindu:
+            sys.stdout.write(jindud + "\r")
+            if xx == x:
+                jindud = jindud + x
+                sys.stdout.write(jindud + "\r")
+                time.sleep(0.01)
+                break
+            else:
+                sys.stdout.write(jindud + x + "\r")
+                time.sleep(0.01)
+                sys.stdout.flush()
+            sys.stdout.write(jindud + "\r")
+    sys.stdout.write(jindud + '\r')
+    print()
+    print('\n')
+    time.sleep(5)
     inp = input('导入IP文本:')
     ips = [x.replace('\n','').strip() for x in open(inp.replace('"',''),'r',encoding='utf-8').readlines()]
     por = input('输入扫描端口(21,22,80-888,6379,27017):')
@@ -525,7 +530,7 @@ if __name__ == '__main__':
     p.join()
 
     res = [y for x in results for y in x.get()]
-    print(res)
+    # print(res)
 
     # for ip in ips:
     #     a = IpInfoScan(ip)
