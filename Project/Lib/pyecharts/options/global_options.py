@@ -17,7 +17,7 @@ from ..options.series_options import (
 class AnimationOpts(BasicOpts):
     def __init__(
         self,
-        animation: bool = True,
+        animation: bool = False,
         animation_threshold: Numeric = 2000,
         animation_duration: Union[Numeric, JSFunc] = 1000,
         animation_easing: Union[str] = "cubicOut",
