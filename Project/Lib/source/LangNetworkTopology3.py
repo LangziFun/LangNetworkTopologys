@@ -477,12 +477,13 @@ def CleanData(IPdata,txtfile,htmlfile,Portfolio):
 def WritePortsServicesIp(datas,filename):
     try:
         workbook = xlsxwriter.Workbook('../'+filename)
-
         worksheet = workbook.add_worksheet('主机端口表')
+        headings = ['主机IP', '开放端口']  # 设置表头
+        worksheet.write_row('A1', headings)
         bold = workbook.add_format({'bold': True})
-        worksheet.set_column(0, 0, 15, bold)
+        worksheet.set_column(0, 10, 20, bold)
         worksheet.set_column(1, 500, 10, bold)
-        row = 0
+        row = 1
         col = 0
         for data in datas:
             worksheet.write(row, col, data.get('ip'))
@@ -510,32 +511,44 @@ def WritePortsServicesIp(datas,filename):
                 serips[serv].append(i.get('ip'))
             if weburls != []:
                 urlips[i.get('ip')] = [str(x + '|' + y) for z in weburls for x, y in z.items()]
+
+
+
         worksheet = workbook.add_worksheet('端口主机表')
         bold = workbook.add_format({'bold': True})
-        worksheet.set_column(0, 0, 10, bold)
-        worksheet.set_column(1, 500, 15, bold)
-        row = 0
+        worksheet.set_column(0, 10, 20, bold)
+        worksheet.set_column(1, 50, 20, bold)
         col = 0
+        row = 0
         for port, hosts in portips.items():
-            worksheet.write(row, col, port)
-            worksheet.write_row(row, col + 1, hosts)
-            row += 1
+            worksheet.write(row, col, '端口:'+port+' 开放主机')
+            for host in hosts:
+                row +=1
+                worksheet.write(row, col, host)
+            row = 0
+            col +=1
         worksheet = workbook.add_worksheet('服务主机表')
         bold = workbook.add_format({'bold': True})
-        worksheet.set_column(0, 0, 15, bold)
-        worksheet.set_column(1, 500, 15, bold)
-        row = 0
+        worksheet.set_column(0, 10, 25, bold)
+        worksheet.set_column(1, 50, 25, bold)
         col = 0
+        row = 0
         for port, hosts in serips.items():
-            worksheet.write(row, col, port)
-            worksheet.write_row(row, col + 1, hosts)
-            row += 1
+            worksheet.write(row, col, '服务:'+port+' 运行主机')
+            for host in hosts:
+                row +=1
+                worksheet.write(row, col, host)
+            row = 0
+            col +=1
+
 
         worksheet = workbook.add_worksheet('网站主机表')
+        headings = ['主机IP', '部署网站']  # 设置表头
+        worksheet.write_row('A1', headings)
         bold = workbook.add_format({'bold': True})
-        worksheet.set_column(0, 0, 15, bold)
+        worksheet.set_column(0, 10, 20, bold)
         worksheet.set_column(1, 500, 50, bold)
-        row = 0
+        row = 1
         col = 0
         for port, hosts in urlips.items():
             cel = 0
@@ -545,11 +558,10 @@ def WritePortsServicesIp(datas,filename):
                                     string=host.split('|')[0] + '|' + host.split('|')[1])
                 cel += 1
             row += 1
-
         worksheet = workbook.add_worksheet('主机资产表')
         headings = ['主机IP', '开放端口', '运行服务', '部署网站']  # 设置表头
         bold = workbook.add_format({'bold': True})
-        worksheet.set_column(0, 0, 15, bold)
+        worksheet.set_column(0, 10, 20, bold)
         worksheet.set_column(1, 10, 60, bold)
         worksheet.write_row('A1', headings)
         row = 1
@@ -665,6 +677,6 @@ if __name__ == '__main__':
     else:
         CleanData(IPdata=res,txtfile=ImgTxt,htmlfile=ImgHtml,Portfolio=Portfolio)
         chk = WritePortsServicesIp(res,Xlsx)
-        print('\n扫描完毕~耗时:{}~\nhtml结果保存在:{}\nxlsx结果保存在:{}'.format(TIME,os.path.join(os.path.abspath('..'),ImgHtml),os.path.join(os.path.abspath('..'),Xlsx)))
+        print('\n扫描完毕~耗时:{}~发现存活主机总数:{}台\nhtml结果保存在:{}\nxlsx结果保存在:{}'.format(TIME,len(res),os.path.join(os.path.abspath('..'),ImgHtml),os.path.join(os.path.abspath('..'),Xlsx)))
     while 1:
         time.sleep(500)
