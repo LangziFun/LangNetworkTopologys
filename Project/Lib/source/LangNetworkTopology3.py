@@ -146,10 +146,6 @@ class IpInfoScan:
             #mas.scan(self.ip,ports='21,22,23,25,80,81,88,8080,8888,999,9999,7000,1433,1521,3306,3389,6379,7001,27017,27018')
             # 这里简单的扫一下普通端口即可
             mas.scan(self.ip, ports=inport, arguments='--rate {}'.format(rate))
-            # if inport == '0':
-            #     mas.scan(self.ip,arguments='--rate {}'.format(rate))
-            # else:
-            #     mas.scan(self.ip,ports=inport,arguments='--rate {}'.format(rate))
             Results = mas.scan_result['scan']
             AliveHosts = list(Results.keys())
             if AliveHosts != []:
@@ -178,20 +174,22 @@ class IpInfoScan:
     def GetBannerServer(self,ip,port):
         try:
             s = socket.socket()
-            s.settimeout(0.5)
+            s.settimeout(2)
             s.connect((ip,int(port)))
             s.send(b'langzi\r\n')
             SocketRecv = (s.recv(1024))
             s.close()
             for k,v in self.Banner.items():
                 for b in v:
-                    banner = re.search(b,SocketRecv,re.I)
+                    banner = re.search(b,SocketRecv,re.I|re.S)
                     if banner:
                         return k.decode()
             return '获取失败'
         except Exception as e:
             # Log('向端口发起连接异常:{}'.format(str(e)))
             return '获取失败'
+        finally:
+            s.close()
 
 
     def GetPoerInfos(self,ip,lis):
@@ -242,7 +240,8 @@ class IpInfoScan:
             #openports = {'192.168.1.1':[22,23,25]}
             #openports = {'192.168.1.1':[22,23,25],'192.168.1.2':[80,8080]}
             if openports != {} and openports != None:
-                print('\n[{}]  主机:{} 端口扫描完毕 存活主机共:{} 个 开始端口运行服务探测'.format(str(datetime.datetime.now()).split('.')[0],self.ip.ljust(15) ,
+                if len(openports) !=0:
+                    print('\n[{}]  主机:{} 端口扫描完毕 存活主机共:{} 个 开始端口运行服务探测'.format(str(datetime.datetime.now()).split('.')[0],self.ip.ljust(15) ,
                                                                    len(openports)))
                 for ZHRNDAA in openports:
                     for k, v in ZHRNDAA.items():
@@ -634,16 +633,16 @@ if __name__ == '__main__':
     inp = input('导入IP文本:')
     ips = [x.replace('\n','').strip() for x in open(inp.replace('"',''),'r',encoding='utf-8').readlines()]
     por = input('输入扫描端口(21,22,80-888,6379,27017):')
-    rat = input('设置每秒发包量(1000-100000):')
+    rat = input('设置每秒发包量(100-2000):')
     pol = input('设置扫描进程数(1-4):')
 
     try:
-        if 0<int(rat)<500000:
-            pass
         if 0<int(pol)<4:
             pass
         else:
-            print('进程数设置错误或者过大，准备死机吧')
+            print('进程数设置过大，CPU配置较差情况下会导致masscan无响应')
+        if int(rat)>2000:
+            print('发包量设置过大，可能会导致误报偏高')
     except:
         print('发包量或进程数设置错误')
         time.sleep(600)
@@ -676,6 +675,7 @@ if __name__ == '__main__':
         print('\n扫描完毕~无存活IP~')
     else:
         CleanData(IPdata=res,txtfile=ImgTxt,htmlfile=ImgHtml,Portfolio=Portfolio)
+        Log('扫描结果:--->'+str(res))
         chk = WritePortsServicesIp(res,Xlsx)
         print('\n扫描完毕~耗时:{}~发现存活主机总数:{}台\nhtml结果保存在:{}\nxlsx结果保存在:{}'.format(TIME,len(res),os.path.join(os.path.abspath('..'),ImgHtml),os.path.join(os.path.abspath('..'),Xlsx)))
     while 1:
