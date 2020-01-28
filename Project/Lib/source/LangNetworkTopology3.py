@@ -242,6 +242,7 @@ class IpInfoScan:
         # 使用本地指纹库识别之前进行二次复检，节省许多不必要复检的端口任务数
         try:
             s = socket.socket()
+            s.settimeout(0.5)
             r =s.connect_ex((ip,int(port)))
             if r == 0:
                 return True
@@ -249,6 +250,8 @@ class IpInfoScan:
                 return False
         except:
             return False
+        finally:
+            s.close()
 
     def GetPoerInfos(self,ip,lis):
         # 传入参数为 开放的端口列表 [80,8888,3389]
