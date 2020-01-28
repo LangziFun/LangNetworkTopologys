@@ -57,34 +57,80 @@ def Requests(url):
     content1 = None
     content2 = None
     try:
-        r = requests.get(url='http://'+url,headers=headers,verify=False,timeout=20)
+        r = requests.get(url='http://'+url,headers=headers,verify=False,timeout=5)
         if b'text/html' in r.content or b'<title>' in r.content or b'</html>' in r.content:
             content1 = r.content
-        if int(r.status_code) in Alive_Status:
-            u = urlparse(str(r.url))
-            title1 = get_title(r.content)
-            url1 = u.scheme + '://' + u.netloc
+            if int(r.status_code) in Alive_Status:
+                u = urlparse(str(r.url))
+                title1 = get_title(r.content)
+                url1 = u.scheme + '://' + u.netloc
+        else:
+            try:
+                s = socket.socket()
+                s.settimeout(1)
+                s.connect((url.split(':')[0], int(url.split(':')[1])))
+                s.send(b'langzi\n\n')
+                rec = s.recv(1024)
+                s.close()
+                if b'HTTP' in rec:
+                    u = urlparse(str(r.url))
+                    title1 = get_title(rec)+'|通过TCP连接端口方式获取信息'
+                    url1 = u.scheme + '://' + u.netloc
+            except Exception as e:
+                pass
+            finally:
+                s.close()
     except Exception as e:
-        pass
+        try:
+            s = socket.socket()
+            s.settimeout(1)
+            s.connect((url.split(':')[0], int(url.split(':')[1])))
+            s.send(b'langzi\n\n')
+            rec = s.recv(1024)
+            s.close()
+            if b'HTTP' in rec:
+                u = urlparse(str('http://'+url))
+                title1 = get_title(rec)+'|通过TCP连接端口方式获取信息'
+                url1 = u.scheme + '://' + u.netloc
+        except Exception as e:
+            pass
+        finally:
+            s.close()
     try:
-        r = requests.get(url='https://'+url,headers=headers,verify=False,timeout=20)
+        r = requests.get(url='https://'+url,headers=headers,verify=False,timeout=5)
         if b'text/html' in r.content or b'<title>' in r.content or b'</html>' in r.content:
             content2 = r.content
-        if int(r.status_code) in Alive_Status:
             u = urlparse(str(r.url))
             title2 = get_title(r.content)
             url2 = u.scheme + '://' + u.netloc
+        else:
+            try:
+                s = socket.socket()
+                s.settimeout(1)
+                s.connect((url.split(':')[0], int(url.split(':')[1])))
+                s.send(b'langzi\n\n')
+                rec = s.recv(1024)
+                s.close()
+                if b'HTTP' in rec:
+                    u = urlparse(str(r.url))
+                    title2 = get_title(rec) +'|通过TCP连接端口方式获取信息'
+                    url2 = u.scheme + '://' + u.netloc
+            except Exception as e:
+                pass
+            finally:
+                s.close()
     except Exception as e:
         pass
-    if title1 != '获取失败':
-        return {url1: title1}
-    if title2 != '获取失败':
-        return {url2: title2}
+    if title1 != '获取失败' and title2 == '获取失败':
+        return [{url1: title1}]
+    if title2 != '获取失败' and title1 == '获取失败':
+        return [{url2: title2}]
+    if title1 != '获取失败' and title2 != '获取失败':
+        return [{url1: title1},{url2: title2}]
     if content1 != None:
-        return {url1:title}
+        return [{url1:title}]
     if content2 != None:
-        return {url2:title}
-
+        return [{url2:title}]
 def Get_Alive_Url(urls):
     '''
     如果想要获取 IP 段内存活web服务
@@ -99,8 +145,8 @@ def Get_Alive_Url(urls):
     with ThreadPoolExecutor(max_workers=8) as p:
         future_tasks = [p.submit(Requests, i) for i in urls]
     result = [obj.result() for obj in future_tasks if obj.result() is not None]
+    result = [y for x in result  for y in x]
     return result
-
 
 from tinydb import TinyDB, where
 from tinydb.storages import JSONStorage
@@ -191,6 +237,18 @@ class IpInfoScan:
         finally:
             s.close()
 
+    def CheckPortOpen(self,ip,port):
+        # 该函数用来对masscan扫描端口进行复检，巧妙之处在于socket连接识别完banner，剩下无法识别连
+        # 使用本地指纹库识别之前进行二次复检，节省许多不必要复检的端口任务数
+        try:
+            s = socket.socket()
+            r =s.connect_ex((ip,int(port)))
+            if r == 0:
+                return True
+            else:
+                return False
+        except:
+            return False
 
     def GetPoerInfos(self,ip,lis):
         # 传入参数为 开放的端口列表 [80,8888,3389]
@@ -204,7 +262,12 @@ class IpInfoScan:
         if PortInfos != {}:
             for k,v in PortInfos.items():
                 if v == '获取失败':
-                    PortInfos[k] = GetPortInfo(str(k))
+                    Cpo = self.CheckPortOpen(ip,k)
+                    # 进一步复检，提升准确率
+                    if Cpo == True:
+                        PortInfos[k] = GetPortInfo(str(k))
+                    else:
+                        del PortInfos[k]
         return PortInfos
 
     def FeatureResult(self,openport):
@@ -617,7 +680,7 @@ if __name__ == '__main__':
     ''')
 
     list_jindu = string.ascii_letters + string.digits + '.' + '_' + ' '+'['+']'+'*'
-    jindu = ' [*] LangNetworkTopology3 Console Start...'
+    jindu = ' [*] LangNetworkTopology3 Start...'
     jindud = ''
     for xx in jindu:
         for x in list_jindu:
@@ -692,7 +755,7 @@ if __name__ == '__main__':
         "44501,45100,48080,49152-49161,49163,49165,49167,49175-49176,49400,49999-50003,50006,50300,50389,50500,50636,50800,51103," \
         "51493,52673,52822,52848,52869,54045,54328,55055-55056,55555,55600,56737-56738,57294,57797,58080,60020,60443,61532,61900,62078,63331,64623,64680,65000,65129,65389"
 
-    print('-----------------------------\n\n扫描端口为:{}\n\n每秒发包量为:{}\n\n扫描进程数为:{}\n\n-----------------------------'.format(por,rat,pol))
+    print('\n-----------------------------\n扫描设置参数如下:\n\n扫描端口为:{}\n\n每秒发包量为:{}\n\n扫描进程数为:{}\n\n-----------------------------'.format(por,rat,pol))
     time.sleep(2)
     start_time = time.time()
 
@@ -720,7 +783,6 @@ if __name__ == '__main__':
         print('\n扫描完毕~无存活IP~')
     else:
         CleanData(IPdata=res,txtfile=ImgTxt,htmlfile=ImgHtml,Portfolio=Portfolio)
-        Log('扫描结果:--->'+str(res))
         chk = WritePortsServicesIp(res,Xlsx)
         print('\n扫描完毕~耗时:{}~发现存活主机总数:{}台\nhtml结果保存在:{}\nxlsx结果保存在:{}'.format(TIME,len(res),os.path.join(os.path.abspath('..'),ImgHtml),os.path.join(os.path.abspath('..'),Xlsx)))
     while 1:
