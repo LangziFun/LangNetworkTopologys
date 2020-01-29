@@ -46,7 +46,10 @@ def get_title(r):
     except:
         return title
     finally:
-        return title
+        if title == '':
+            return title + '标题为空'
+        else:
+            return title
 def Requests(url):
     headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
     url1 = 'http://'+url
@@ -305,7 +308,7 @@ class IpInfoScan:
 
     def GetResult(self,inport,rate,Portfolio):
         try:
-            print('\n[{}]  端口扫描 : {}\n'.format(str(datetime.datetime.now()).split('.')[0], self.ip))
+            # print('\n[{}]  端口扫描 : {}\n'.format(str(datetime.datetime.now()).split('.')[0], self.ip))
             Log('开始扫描IP:{}'.format(self.ip))
             stat = time.time()
             if '-' in self.ip or '/' in self.ip:
@@ -315,14 +318,13 @@ class IpInfoScan:
             #openports = {'192.168.1.1':[22,23,25]}
             #openports = {'192.168.1.1':[22,23,25],'192.168.1.2':[80,8080]}
             if openports != {} and openports != None:
-                if len(openports) !=0:
-                    try:
-                        TIMES = str(int(str(time.time() - stat).split('.')[0]))+'秒'
-                        print('\n[{}]  主机资产:{} 相关端口扫描完毕 发现存活主机共:{} 个 耗时:{}\n'.format(str(datetime.datetime.now()).split('.')[0],self.ip.ljust(15) ,
-                                                                       len(openports),TIMES))
-                        time.sleep(2)
-                    except:
-                        pass
+                try:
+                    TIMES = str(int(str(time.time() - stat).split('.')[0]))+'秒'
+                    print('\n[{}]  主机资产:{} 相关端口扫描完毕 发现存活主机共:{} 个 耗时:{}\n'.format(str(datetime.datetime.now()).split('.')[0],self.ip.ljust(15) ,
+                                                                   len(openports),TIMES))
+                    time.sleep(2)
+                except:
+                    pass
                 for ZHRNDAA in openports:
                     for k, v in ZHRNDAA.items():
                         Log('主机 {} 开放端口 {} '.format(k, str(v)))
