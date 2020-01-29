@@ -219,10 +219,6 @@ class IpInfoScan:
         try:
             mas = masscan.PortScanner()
             mas.scan(self.ip, ports=inport, arguments='--rate {}'.format(rate))
-            # if inport == '0':
-            #     mas.scan(self.ip,arguments='--rate {}'.format(rate))
-            # else:
-            #     mas.scan(self.ip,ports=inport,arguments='--rate {}'.format(rate))
             OpenPorts = mas.scan_result['scan'][ip]['tcp'].keys()
         except Exception as e:
             Log('获取扫描IP端口结果异常:{}'.format(str(e)))
@@ -275,8 +271,8 @@ class IpInfoScan:
             PortInfos[str(li)] = server
 
         if PortInfos != {}:
-            for k,v in PortInfos.items():
-                if v == '获取失败':
+            for k in list(PortInfos.keys()):
+                if PortInfos[k] == '获取失败':
                     Cpo = self.CheckPortOpen(ip,k)
                     # 进一步复检，提升准确率
                     if Cpo == True:
