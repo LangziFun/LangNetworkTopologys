@@ -15,14 +15,14 @@
     
 调用方法：    
   
-    ip = '118.24.11.0/24'
+    ip = '192.168.0.0/24'
     a = IpInfoScan(ip)
     res = a.GetResult()
     print(res)    
 
 or:
 
-    ip = '118.24.11.5'
+    ip = '192.168.0.1'
     a = IpInfoScan(ip)
     res = a.GetResult()
     print(res)    
