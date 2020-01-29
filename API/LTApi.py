@@ -253,8 +253,8 @@ class IpInfoScan:
             PortInfos[str(li)] = server
 
         if PortInfos != {}:
-            for k,v in PortInfos.items():
-                if v == '获取失败':
+            for k in list(PortInfos.keys()):
+                if PortInfos[k] == '获取失败':
                     Cpo = self.CheckPortOpen(ip,k)
                     # 进一步复检，提升准确率
                     if Cpo == True:
