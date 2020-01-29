@@ -189,7 +189,7 @@ def GetPortInfo(port, like=False):
     try:
         return ports[0]['name']  # flake8: noqa (F812)
     except:
-        return '识别端口异常'
+        return '指纹库无该端口数据:{}'.format(port)
 
 
 
@@ -563,7 +563,7 @@ def WritePortsServicesIp(datas,filename):
         worksheet.write_row('A1', headings)
         bold = workbook.add_format({'bold': True})
         worksheet.set_column(0, 10, 20, bold)
-        worksheet.set_column(1, 500, 10, bold)
+        worksheet.set_column(1, len(datas), 10, bold)
         row = 1
         col = 0
         for data in datas:
@@ -598,7 +598,7 @@ def WritePortsServicesIp(datas,filename):
         worksheet = workbook.add_worksheet('端口主机表')
         bold = workbook.add_format({'bold': True})
         worksheet.set_column(0, 10, 20, bold)
-        worksheet.set_column(1, 50, 20, bold)
+        worksheet.set_column(1, len(portips), 20, bold)
         col = 0
         row = 0
         for port, hosts in portips.items():
@@ -611,7 +611,7 @@ def WritePortsServicesIp(datas,filename):
         worksheet = workbook.add_worksheet('服务主机表')
         bold = workbook.add_format({'bold': True})
         worksheet.set_column(0, 10, 25, bold)
-        worksheet.set_column(1, 50, 25, bold)
+        worksheet.set_column(1, len(serips), 25, bold)
         col = 0
         row = 0
         for port, hosts in serips.items():
@@ -628,7 +628,7 @@ def WritePortsServicesIp(datas,filename):
         worksheet.write_row('A1', headings)
         bold = workbook.add_format({'bold': True})
         worksheet.set_column(0, 10, 20, bold)
-        worksheet.set_column(1, 500, 50, bold)
+        worksheet.set_column(1, len(urlips), 50, bold)
         row = 1
         col = 0
         for port, hosts in urlips.items():
