@@ -211,9 +211,10 @@ class IpInfoScan:
             AliveHosts = list(Results.keys())
             if AliveHosts != []:
                 for k, v in Results.items():
-                    HostInfos = {}
-                    HostInfos[str(k)] = list(v['tcp'].keys())
-                    Ret.append(HostInfos)
+                    if len(list(v['tcp'].keys()))<500:
+                        HostInfos = {}
+                        HostInfos[str(k)] = list(v['tcp'].keys())
+                        Ret.append(HostInfos)
         except Exception as e:
             Log('扫描IP出现异常:{}'.format(str(e)))
         return list(Ret)
@@ -226,7 +227,10 @@ class IpInfoScan:
         except Exception as e:
             Log('获取扫描IP端口结果异常:{}'.format(str(e)))
             return None
-        return [{ip:OpenPorts}]
+        if len(OpenPorts)<500:
+            return [{ip:OpenPorts}]
+        else:
+            return []
 
     def GetBannerServer(self,ip,port):
         try:
@@ -315,9 +319,9 @@ class IpInfoScan:
                 openports = self.GetOpenPort(inport,rate)
             else:
                 openports = self.GetOneIPorts(self.ip,inport,rate)
-            #openports = {'192.168.1.1':[22,23,25]}
-            #openports = {'192.168.1.1':[22,23,25],'192.168.1.2':[80,8080]}
-            if openports != {} and openports != None:
+            #openports = [{'192.168.1.1':[22,23,25]}]
+            #openports = [{'192.168.1.1':[22,23,25],'192.168.1.2':[80,8080]}]
+            if openports != {} and openports != None and openports != []:
                 try:
                     TIMES = str(int(str(time.time() - stat).split('.')[0]))+'秒'
                     print('\n[{}]  主机资产:{} 相关端口扫描完毕 发现存活主机共:{} 个 耗时:{}\n'.format(str(datetime.datetime.now()).split('.')[0],self.ip.ljust(15) ,
