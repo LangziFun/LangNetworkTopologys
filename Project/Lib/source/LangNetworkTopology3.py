@@ -211,7 +211,7 @@ class IpInfoScan:
             AliveHosts = list(Results.keys())
             if AliveHosts != []:
                 for k, v in Results.items():
-                    if len(list(v['tcp'].keys()))<500:
+                    if len(list(v['tcp'].keys()))<1000:
                         HostInfos = {}
                         HostInfos[str(k)] = list(v['tcp'].keys())
                         Ret.append(HostInfos)
@@ -226,8 +226,8 @@ class IpInfoScan:
             OpenPorts = mas.scan_result['scan'][ip]['tcp'].keys()
         except Exception as e:
             Log('获取扫描IP端口结果异常:{}'.format(str(e)))
-            return None
-        if len(OpenPorts)<500:
+            return []
+        if len(OpenPorts)<1000:
             return [{ip:OpenPorts}]
         else:
             return []
@@ -286,6 +286,8 @@ class IpInfoScan:
                         PortInfos[k] = GetPortInfo(str(k))
                     else:
                         del PortInfos[k]
+        if len(PortInfos)>100:
+            return {'WAF拦截导致误报': '扫描返回开放端口总数:{}'.format(len(PortInfos))}
         return PortInfos
 
     def FeatureResult(self,openport):
@@ -304,9 +306,9 @@ class IpInfoScan:
             retuls['services'] = res
             retuls['urls'] = AliveUrls
             print('[{}]  主机:{} 开放端口:{} 个 部署网站:{} 个 运行服务:{}'.format(str(datetime.datetime.now()).split('.')[0], k.ljust(15),
-                                                                   len(v), len(AliveUrls), '/'.join(list(res.values()))))
+                                                                   len(list(res.keys())), len(AliveUrls), '/'.join(list(res.values()))))
             Log('主机:{} 开放端口:{} 个 部署网站:{} 个 运行服务:{} 开放端口:{}'.format( k.ljust(15),
-                                                                   len(v), len(AliveUrls), '/'.join(list(res.values())),str(list(res.keys()))))
+                                                                   len(list(res.keys())), len(AliveUrls), '/'.join(list(res.values())),str(list(res.keys()))))
             retuls['time'] = str(datetime.datetime.now()).replace(' ', '-').replace(':', '-').split('.')[0]
             return retuls
 
